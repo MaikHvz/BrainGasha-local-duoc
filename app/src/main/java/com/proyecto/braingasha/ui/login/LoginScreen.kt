@@ -31,6 +31,7 @@ fun LoginRegisterScreen() {
     var isLogin by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") } // Nuevo estado para confirmación
 
     Box(
         modifier = Modifier
@@ -54,9 +55,7 @@ fun LoginRegisterScreen() {
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(bottom = 16.dp),
                     fontWeight = FontWeight.Bold,
-                    color=Color(0xFFEF6B24)
-
-
+                    color = Color(0xFFEF6B24)
                 )
 
                 OutlinedTextField(
@@ -76,19 +75,37 @@ fun LoginRegisterScreen() {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Mostrar solo en modo registro
+                if (!isLogin) {
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Confirmar contraseña") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 Button(
                     onClick = {
                         if (isLogin) {
                             // Lógica de login
                         } else {
-                            // Lógica de registro
+                            if (password == confirmPassword) {
+                                // Lógica de registro con contraseñas coincidentes
+                            } else {
+                                // Mostrar error: contraseñas no coinciden
+                            }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFEF6B24), // Verde como ejemplo
-                        contentColor = Color.White          // Color del texto
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF6B24),
+                        contentColor = Color.White
                     )
                 ) {
                     Text(text = if (isLogin) "Entrar" else "Registrarse")
@@ -108,6 +125,7 @@ fun LoginRegisterScreen() {
         }
     }
 }
+
 @Preview
 @Composable
 fun LoginRegisterScreenPreview() {
