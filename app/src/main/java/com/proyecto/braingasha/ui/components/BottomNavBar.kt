@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.proyecto.braingasha.R
+import com.proyecto.braingasha.ui.navigation.Routes
 
 @Composable
 fun BottomNavBar(navController: NavController) {
@@ -24,33 +25,33 @@ fun BottomNavBar(navController: NavController) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
 
         NavigationBarItem(
-            selected = currentRoute == "home",
-            onClick = { navController.navigate("home") },
+            selected = currentRoute == Routes.HOME,
+            onClick = { navController.navigate(Routes.HOME) },
             icon = { Icon(painterResource(R.drawable.home), contentDescription = "Home",modifier = Modifier.size(50.dp)) }
         )
 
         NavigationBarItem(
-            selected = currentRoute == "sparks",
-            onClick = { navController.navigate("sparks") },
+            selected = currentRoute == Routes.SPARKS,
+            onClick = { navController.navigate(Routes.SPARKS) },
             icon = { Icon(painterResource(R.drawable.sparkles), contentDescription = "Sparks",modifier = Modifier.size(50.dp))
             }
         )
 
         NavigationBarItem(
-            selected = currentRoute == "coleccion",
-            onClick = { navController.navigate("coleccion") },
+            selected = currentRoute == Routes.COLECCION,
+            onClick = { navController.navigate(Routes.COLECCION) },
             icon = { Icon(painterResource(R.drawable.grid), contentDescription = "Colección",modifier = Modifier.size(50.dp)) }
         )
 
         NavigationBarItem(
-            selected = currentRoute == "tienda",
-            onClick = { navController.navigate("tienda") },
+            selected = currentRoute == Routes.TIENDA,
+            onClick = { navController.navigate(Routes.TIENDA) },
             icon = { Icon(painterResource(R.drawable.shop), contentDescription = "Tienda",modifier = Modifier.size(50.dp)) }
         )
 
         NavigationBarItem(
-            selected = currentRoute == "profile",
-            onClick = { navController.navigate("profile") },
+            selected = currentRoute == Routes.PROFILE,
+            onClick = { navController.navigate(Routes.PROFILE) },
             icon = { Icon(painterResource(R.drawable.custom), contentDescription = "Perfil",modifier = Modifier.size(50.dp)) }
         )
     }

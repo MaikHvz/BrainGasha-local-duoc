@@ -6,5 +6,7 @@ data class User(
     val password: String,
     val username: String,
     val profileImageUri: String? = null,
-    val coins: Int = 1000
+    val coins: Int = 1000,
+    val totalCartas: Int = 0,
+    val totalTiradas: Int = 0
 )

@@ -4,9 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,21 +15,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.proyecto.braingasha.R
-import com.proyecto.braingasha.data.User
 import com.proyecto.braingasha.ui.theme.*
-import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
-import androidx.navigation.NavController
+import com.proyecto.braingasha.ui.viewmodel.HomeViewModel
 
 @Composable
-fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel, navController: NavController) {
-    val currentUser by authViewModel.currentUser.collectAsState()
-    val userCoins = currentUser?.coins ?: 0
-    val totalPulls by authViewModel.totalPulls.collectAsState()
-    val userCards = authViewModel.getUserCards().size
+fun HomeBody(innerPadding: PaddingValues, viewModel: HomeViewModel, onViewCollection: () -> Unit) {
+    val uiState by viewModel.uiState.collectAsState()
+    val userCoins = uiState.coins
+    val totalPulls = uiState.totalPulls
+    val userCards = uiState.userCards
 
     Column(
         modifier = Modifier
@@ -124,15 +119,7 @@ fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel, navContr
 
             // Botones
             Button(
-                onClick = { 
-                    // Costo de tirar una carta: 100 monedas
-                    val success = authViewModel.spendCoins(100)
-                    if (success) {
-                        // Generar una carta aleatoria (ID entre 1 y 10)
-                        val randomCardId = (1..10).random().toString()
-                        authViewModel.addCard(randomCardId)
-                    }
-                },
+                onClick = { viewModel.onPull() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Purpura,
                     contentColor = Color.White
@@ -153,7 +140,7 @@ fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel, navContr
             Spacer(modifier = Modifier.height(15.dp))
 
             OutlinedButton(
-                onClick = { navController.navigate("coleccion") },
+                onClick = { onViewCollection() },
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth(0.8f)

@@ -21,12 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.proyecto.braingasha.ui.theme.Purpura
-import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
+import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
 
 @Composable
-fun ColeccionScreen(authViewModel: AuthViewModel) {
-    val currentUser by authViewModel.currentUser.collectAsState()
-    val userCards = authViewModel.getUserCards().toList()
+fun ColeccionScreen(viewModel: ColeccionViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val userCards = uiState.cards
     
     Column(
         modifier = Modifier

@@ -3,6 +3,7 @@ package com.proyecto.braingasha.ui.main
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -13,7 +14,11 @@ import com.proyecto.braingasha.ui.components.TopBar
 import com.proyecto.braingasha.ui.home.HomeScreen
 import com.proyecto.braingasha.ui.coleccion.ColeccionScreen
 import com.proyecto.braingasha.ui.profile.ProfileScreen
+import com.proyecto.braingasha.ui.sparks.SparksScreen
+import com.proyecto.braingasha.ui.tienda.TiendaScreen
 import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
+import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
+import com.proyecto.braingasha.ui.navigation.Routes
 
 @Composable
 fun MainScreen(
@@ -30,12 +35,17 @@ fun MainScreen(
         // Aquí cambia el contenido (Home, Colección, o Perfil)
         NavHost(
             navController = navController,
-            startDestination = "home", // Pantalla inicial
+            startDestination = Routes.HOME, // Pantalla inicial
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen(navController, innerPadding, authViewModel) }
-            composable("coleccion") { ColeccionScreen(authViewModel) }
-            composable("profile") { ProfileScreen(authViewModel = authViewModel) }
+            composable(Routes.HOME) { HomeScreen(navController, innerPadding, authViewModel) }
+            composable(Routes.SPARKS) { SparksScreen() }
+            composable(Routes.COLECCION) {
+                val coleccionViewModel = remember(authViewModel) { ColeccionViewModel(authViewModel) }
+                ColeccionScreen(coleccionViewModel)
+            }
+            composable(Routes.TIENDA) { TiendaScreen() }
+            composable(Routes.PROFILE) { ProfileScreen(authViewModel = authViewModel) }
         }
     }
 }

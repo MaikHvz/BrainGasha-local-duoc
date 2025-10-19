@@ -269,6 +269,5 @@ fun  HomeScreen() {
 @Preview(showSystemUi = true)
 @Composable
 fun ColumnContainerPreview() {
-    HomeScreen()
-
+    ColumnContainer()
 }

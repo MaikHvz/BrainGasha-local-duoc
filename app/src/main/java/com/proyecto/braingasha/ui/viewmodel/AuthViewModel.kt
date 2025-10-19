@@ -38,7 +38,9 @@ class AuthViewModel(
         val username = prefs.getString("username", null)
         val profileImageUri = prefs.getString("profileImageUri", null)
         val coins = prefs.getInt("coins", 1000) // Default 1000 coins
-        val totalPulls = prefs.getInt("total_pulls", 0) // Cargar total de tiradas
+        val userCardsSet = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
+        val totalCartas = prefs.getInt("total_cartas", userCardsSet.size)
+        val totalTiradas = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
 
         if (email != null && password != null) {
             _currentUser.value = User(
@@ -47,10 +49,17 @@ class AuthViewModel(
                 password = password,
                 username = username ?: "Usuario",
                 profileImageUri = profileImageUri,
-                coins = coins
+                coins = coins,
+                totalCartas = totalCartas,
+                totalTiradas = totalTiradas
             )
             _isLoggedIn.value = true
-            _totalPulls.value = totalPulls
+            _totalPulls.value = totalTiradas
+            // Normalizar claves nuevas
+            prefs.edit().apply {
+                putInt("total_cartas", totalCartas)
+                putInt("total_tiradas", totalTiradas)
+            }.apply()
         }
     }
 
@@ -64,16 +73,20 @@ class AuthViewModel(
                 val savedPassword = prefs.getString("password", "")
                 
                 if (email == savedEmail && password == savedPassword) {
+                    val userCardsSet = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
                     val user = User(
                         id = 1,
                         email = email,
                         password = password,
                         username = prefs.getString("username", "") ?: "",
                         profileImageUri = prefs.getString("profileImageUri", null),
-                        coins = prefs.getInt("coins", 1000)
+                        coins = prefs.getInt("coins", 1000),
+                        totalCartas = prefs.getInt("total_cartas", userCardsSet.size),
+                        totalTiradas = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
                     )
                     _currentUser.value = user
                     _isLoggedIn.value = true
+                    _totalPulls.value = user.totalTiradas
                 } else {
                     _errorMessage.value = "Credenciales incorrectas"
                 }
@@ -102,6 +115,10 @@ class AuthViewModel(
                         putString("username", username)
                         putString("profileImageUri", null)
                         putInt("coins", 1000)
+                        putInt("total_tiradas", 0)
+                        putStringSet("user_cards", mutableSetOf())
+                        putInt("total_cartas", 0)
+                        putInt("total_pulls", 0)
                         apply()
                     }
                     
@@ -111,10 +128,13 @@ class AuthViewModel(
                         password = password,
                         username = username,
                         profileImageUri = null,
-                        coins = 1000
+                        coins = 1000,
+                        totalCartas = 0,
+                        totalTiradas = 0
                     )
                     _currentUser.value = user
                     _isLoggedIn.value = true
+                    _totalPulls.value = 0
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Error al registrarse: ${e.message}"
@@ -163,8 +183,13 @@ class AuthViewModel(
             }
             // Incrementar el contador de tiradas
             _totalPulls.value = _totalPulls.value + 1
-            // Guardar el total de tiradas en SharedPreferences
-            prefs.edit().putInt("total_pulls", _totalPulls.value).apply()
+            // Guardar el total de tiradas en SharedPreferences (compatibilidad)
+            prefs.edit().apply {
+                putInt("total_pulls", _totalPulls.value)
+                putInt("total_tiradas", _totalPulls.value)
+            }.apply()
+            // Actualizar el usuario en memoria
+            _currentUser.value = _currentUser.value?.copy(totalTiradas = _totalPulls.value)
             return true
         }
         return false
@@ -175,6 +200,10 @@ class AuthViewModel(
         val updatedCards = currentCards.toMutableSet()
         updatedCards.add(cardId)
         prefs.edit().putStringSet("user_cards", updatedCards).apply()
+        // Actualizar total de cartas persistido y en memoria
+        val totalCartas = updatedCards.size
+        prefs.edit().putInt("total_cartas", totalCartas).apply()
+        _currentUser.value = _currentUser.value?.copy(totalCartas = totalCartas)
     }
     
     fun getUserCards(): Set<String> {

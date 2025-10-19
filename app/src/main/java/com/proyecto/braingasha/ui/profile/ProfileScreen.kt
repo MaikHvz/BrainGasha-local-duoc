@@ -238,7 +238,7 @@ fun ProfileScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "0", // TODO: Implementar conteo de cartas
+                            text = "${currentUser?.totalCartas ?: 0}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFEF6B24)
@@ -248,7 +248,7 @@ fun ProfileScreen(
                     
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "0", // TODO: Implementar conteo de tiradas
+                            text = "${currentUser?.totalTiradas ?: 0}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFEF6B24)
