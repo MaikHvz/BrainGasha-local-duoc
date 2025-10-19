@@ -24,9 +24,10 @@ import com.proyecto.braingasha.R
 import com.proyecto.braingasha.data.User
 import com.proyecto.braingasha.ui.theme.*
 import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
+import androidx.navigation.NavController
 
 @Composable
-fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
+fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel, navController: NavController) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val userCoins = currentUser?.coins ?: 0
     val totalPulls by authViewModel.totalPulls.collectAsState()
@@ -152,7 +153,7 @@ fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
             Spacer(modifier = Modifier.height(15.dp))
 
             OutlinedButton(
-                onClick = { /* TODO: acción */ },
+                onClick = { navController.navigate("coleccion") },
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
