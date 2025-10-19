@@ -47,5 +47,11 @@ fun BottomNavBar(navController: NavController) {
             onClick = { navController.navigate("tienda") },
             icon = { Icon(painterResource(R.drawable.shop), contentDescription = "Tienda",modifier = Modifier.size(50.dp)) }
         )
+
+        NavigationBarItem(
+            selected = currentRoute == "profile",
+            onClick = { navController.navigate("profile") },
+            icon = { Icon(painterResource(R.drawable.custom), contentDescription = "Perfil",modifier = Modifier.size(50.dp)) }
+        )
     }
 }

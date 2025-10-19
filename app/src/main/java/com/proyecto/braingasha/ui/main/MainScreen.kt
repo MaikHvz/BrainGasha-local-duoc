@@ -12,9 +12,13 @@ import com.proyecto.braingasha.ui.components.BottomNavBar
 import com.proyecto.braingasha.ui.components.TopBar
 import com.proyecto.braingasha.ui.home.HomeScreen
 import com.proyecto.braingasha.ui.coleccion.ColeccionScreen
+import com.proyecto.braingasha.ui.profile.ProfileScreen
+import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    authViewModel: AuthViewModel
+) {
     // Controlador que maneja a qué pantalla estás navegando
     val navController = rememberNavController()
 
@@ -23,7 +27,7 @@ fun MainScreen() {
         topBar = { TopBar() },
         bottomBar = { BottomNavBar(navController) } // se lo pasamos al BottomNav
     ) { innerPadding ->
-        // Aquí cambia el contenido (Home o Colección)
+        // Aquí cambia el contenido (Home, Colección, o Perfil)
         NavHost(
             navController = navController,
             startDestination = "home", // Pantalla inicial
@@ -31,12 +35,7 @@ fun MainScreen() {
         ) {
             composable("home") { HomeScreen(navController,innerPadding) } // ✅ ahora sí se pasa
             composable("coleccion") { ColeccionScreen() }
+            composable("profile") { ProfileScreen(authViewModel = authViewModel) }
         }
     }
-}
-// 🧩 Vista previa del Scaffold completo
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    MainScreen()
 }

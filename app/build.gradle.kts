@@ -52,6 +52,19 @@ dependencies {
     implementation(libs.androidx.navigation.compose.android)
 
     implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
+    
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // Permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    
+    // SQLite simple
+    implementation("androidx.sqlite:sqlite:2.4.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -60,7 +73,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.compose.material3:material3:1.3.0")
-
 
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
 // para icons extra

@@ -8,11 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,15 +19,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.proyecto.braingasha.R
 import com.proyecto.braingasha.ui.theme.*
+import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 
 @Composable
-fun LoginRegisterScreen() {
+fun LoginRegisterScreen(
+    authViewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit = {}
+) {
     var isLogin by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") } // Nuevo estado para confirmación
+    var confirmPassword by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsStateWithLifecycle()
+    val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
+
+    // Si el usuario está logueado, navegar a la pantalla principal
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            onLoginSuccess()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -58,6 +71,22 @@ fun LoginRegisterScreen() {
                     color = Color(0xFFEF6B24)
                 )
 
+                // Mostrar error si existe
+                errorMessage?.let { error ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))
+                    ) {
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -66,6 +95,18 @@ fun LoginRegisterScreen() {
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                // Campo de username solo en registro
+                if (!isLogin) {
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Nombre de usuario") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 OutlinedTextField(
                     value = password,
@@ -92,13 +133,12 @@ fun LoginRegisterScreen() {
 
                 Button(
                     onClick = {
+                        authViewModel.clearError()
                         if (isLogin) {
-                            // Lógica de login
+                            authViewModel.login(email, password)
                         } else {
-                            if (password == confirmPassword) {
-                                // Lógica de registro con contraseñas coincidentes
-                            } else {
-                                // Mostrar error: contraseñas no coinciden
+                            if (password == confirmPassword && username.isNotBlank()) {
+                                authViewModel.register(email, password, username)
                             }
                         }
                     },
@@ -106,14 +146,25 @@ fun LoginRegisterScreen() {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFEF6B24),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = !isLoading
                 ) {
-                    Text(text = if (isLogin) "Entrar" else "Registrarse")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text(text = if (isLogin) "Entrar" else "Registrarse")
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                TextButton(onClick = { isLogin = !isLogin }) {
+                TextButton(onClick = { 
+                    isLogin = !isLogin
+                    authViewModel.clearError()
+                }) {
                     Text(
                         text = if (isLogin)
                             "¿No tienes cuenta? Regístrate"
@@ -126,10 +177,3 @@ fun LoginRegisterScreen() {
     }
 }
 
-@Preview
-@Composable
-fun LoginRegisterScreenPreview() {
-    // Asegúrate de envolverlo con tu tema si usas uno personalizado
-
-        LoginRegisterScreen()
-}
