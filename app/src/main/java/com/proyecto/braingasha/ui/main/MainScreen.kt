@@ -24,7 +24,7 @@ fun MainScreen(
 
     // Scaffold principal
     Scaffold(
-        topBar = { TopBar() },
+        topBar = { TopBar(authViewModel) },
         bottomBar = { BottomNavBar(navController) } // se lo pasamos al BottomNav
     ) { innerPadding ->
         // Aquí cambia el contenido (Home, Colección, o Perfil)

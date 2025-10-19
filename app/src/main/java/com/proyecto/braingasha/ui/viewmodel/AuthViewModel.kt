@@ -27,6 +27,32 @@ class AuthViewModel(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    
+    private val _totalPulls = MutableStateFlow(0)
+    val totalPulls: StateFlow<Int> = _totalPulls.asStateFlow()
+    
+    init {
+        // Cargar datos del usuario si existe
+        val email = prefs.getString("email", null)
+        val password = prefs.getString("password", null)
+        val username = prefs.getString("username", null)
+        val profileImageUri = prefs.getString("profileImageUri", null)
+        val coins = prefs.getInt("coins", 1000) // Default 1000 coins
+        val totalPulls = prefs.getInt("total_pulls", 0) // Cargar total de tiradas
+
+        if (email != null && password != null) {
+            _currentUser.value = User(
+                id = 1,
+                email = email,
+                password = password,
+                username = username ?: "Usuario",
+                profileImageUri = profileImageUri,
+                coins = coins
+            )
+            _isLoggedIn.value = true
+            _totalPulls.value = totalPulls
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -135,6 +161,10 @@ class AuthViewModel(
                     _currentUser.value = user.copy(coins = newCoins)
                 }
             }
+            // Incrementar el contador de tiradas
+            _totalPulls.value = _totalPulls.value + 1
+            // Guardar el total de tiradas en SharedPreferences
+            prefs.edit().putInt("total_pulls", _totalPulls.value).apply()
             return true
         }
         return false

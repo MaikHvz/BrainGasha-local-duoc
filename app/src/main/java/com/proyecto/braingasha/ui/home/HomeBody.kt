@@ -29,6 +29,8 @@ import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val userCoins = currentUser?.coins ?: 0
+    val totalPulls by authViewModel.totalPulls.collectAsState()
+    val userCards = authViewModel.getUserCards().size
 
     Column(
         modifier = Modifier
@@ -88,13 +90,13 @@ fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "$userCoins",
+                        text = "$userCards",
                         fontWeight = FontWeight.Bold,
                         color = Purpura,
                         fontSize = 22.sp
                     )
                     Text(
-                        text = "Monedas\nDisponibles",
+                        text = "Cartas\nColeccionadas",
                         textAlign = TextAlign.Center,
                         color = Gris,
                         fontSize = 15.sp,
@@ -104,7 +106,7 @@ fun HomeBody(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "1",
+                        text = "$totalPulls",
                         fontWeight = FontWeight.ExtraBold,
                         color = Purpura,
                         fontSize = 22.sp
