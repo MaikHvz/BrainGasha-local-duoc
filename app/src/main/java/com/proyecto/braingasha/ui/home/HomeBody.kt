@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,12 +18,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.proyecto.braingasha.R
-
 import com.proyecto.braingasha.ui.theme.*
+import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 
 @Composable
-fun HomeBody(innerPadding: PaddingValues) {
+fun HomeBody(
+    innerPadding: PaddingValues,
+    authViewModel: AuthViewModel
+) {
+    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+    val userCards by authViewModel.getUserCards().collectAsStateWithLifecycle(initialValue = emptyList())
+    
+    var showCardResult by remember { mutableStateOf(false) }
+    var drawnCard by remember { mutableStateOf<String?>(null) }
 
 
     Column(
@@ -86,7 +95,7 @@ fun HomeBody(innerPadding: PaddingValues) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "1",
+                        text = "${userCards.size}",
                         fontWeight = FontWeight.Bold,
                         color = Purpura,
                         fontSize = 22.sp
@@ -102,13 +111,13 @@ fun HomeBody(innerPadding: PaddingValues) {
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "1",
+                        text = "${currentUser?.coins ?: 0}",
                         fontWeight = FontWeight.ExtraBold,
                         color = Purpura,
                         fontSize = 22.sp
                     )
                     Text(
-                        text = "Tiradas\nTotales",
+                        text = "Monedas\nDisponibles",
                         textAlign = TextAlign.Center,
                         color = Gris,
                         fontSize = 15.sp,
@@ -119,7 +128,12 @@ fun HomeBody(innerPadding: PaddingValues) {
 
             // Botones
             Button(
-                onClick = { /* TODO: acción */ },
+                onClick = { 
+                    if ((currentUser?.coins ?: 0) >= 100) {
+                        authViewModel.drawCard()
+                        showCardResult = true
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Purpura,
                     contentColor = Color.White
@@ -127,10 +141,11 @@ fun HomeBody(innerPadding: PaddingValues) {
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .height(45.dp)
+                    .height(45.dp),
+                enabled = (currentUser?.coins ?: 0) >= 100
             ) {
                 Text(
-                    text = "Tirar",
+                    text = "Tirar (100 monedas)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -161,8 +176,4 @@ fun HomeBody(innerPadding: PaddingValues) {
     }
 }
 
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun PreviewHomeBody() {
-    HomeBody(innerPadding = PaddingValues(0.dp))
-}
+

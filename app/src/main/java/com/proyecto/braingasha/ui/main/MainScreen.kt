@@ -33,8 +33,8 @@ fun MainScreen(
             startDestination = "home", // Pantalla inicial
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen(navController,innerPadding) } // ✅ ahora sí se pasa
-            composable("coleccion") { ColeccionScreen() }
+            composable("home") { HomeScreen(navController, innerPadding, authViewModel) }
+            composable("coleccion") { ColeccionScreen(authViewModel) }
             composable("profile") { ProfileScreen(authViewModel = authViewModel) }
         }
     }

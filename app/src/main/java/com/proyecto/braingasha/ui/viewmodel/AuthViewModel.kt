@@ -1,10 +1,13 @@
 package com.proyecto.braingasha.ui.viewmodel
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.proyecto.braingasha.data.User
+import com.proyecto.braingasha.data.entity.User
+import com.proyecto.braingasha.data.database.AppDatabase
+import com.proyecto.braingasha.data.database.DatabaseInitializer
+import com.proyecto.braingasha.data.repository.UserRepository
+import com.proyecto.braingasha.data.repository.CardRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +17,17 @@ class AuthViewModel(
     private val context: Context
 ) : ViewModel() {
     
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    private val database = AppDatabase.getDatabase(context)
+    private val userRepository = UserRepository(database.userDao())
+    private val cardRepository = CardRepository(database.cardDao())
+    private val databaseInitializer = DatabaseInitializer(database.cardDao())
+    
+    init {
+        // Inicializar la base de datos con cartas de ejemplo
+        viewModelScope.launch {
+            databaseInitializer.initializeDatabase()
+        }
+    }
 
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -34,18 +47,8 @@ class AuthViewModel(
             _errorMessage.value = null
             
             try {
-                val savedEmail = prefs.getString("email", "")
-                val savedPassword = prefs.getString("password", "")
-                
-                if (email == savedEmail && password == savedPassword) {
-                    val user = User(
-                        id = 1,
-                        email = email,
-                        password = password,
-                        username = prefs.getString("username", "") ?: "",
-                        profileImageUri = prefs.getString("profileImageUri", null),
-                        coins = prefs.getInt("coins", 1000)
-                    )
+                val user = userRepository.login(email, password)
+                if (user != null) {
                     _currentUser.value = user
                     _isLoggedIn.value = true
                 } else {
@@ -65,31 +68,22 @@ class AuthViewModel(
             _errorMessage.value = null
             
             try {
-                val existingEmail = prefs.getString("email", "")
-                if (email == existingEmail) {
-                    _errorMessage.value = "El usuario ya existe"
-                } else {
-                    // Guardar datos en SharedPreferences
-                    prefs.edit().apply {
-                        putString("email", email)
-                        putString("password", password)
-                        putString("username", username)
-                        putString("profileImageUri", null)
-                        putInt("coins", 1000)
-                        apply()
+                val user = User(
+                    email = email,
+                    password = password,
+                    username = username
+                )
+                
+                val result = userRepository.register(user)
+                result.fold(
+                    onSuccess = { userId ->
+                        _currentUser.value = user.copy(id = userId)
+                        _isLoggedIn.value = true
+                    },
+                    onFailure = { error ->
+                        _errorMessage.value = error.message ?: "Error al registrarse"
                     }
-                    
-                    val user = User(
-                        id = 1,
-                        email = email,
-                        password = password,
-                        username = username,
-                        profileImageUri = null,
-                        coins = 1000
-                    )
-                    _currentUser.value = user
-                    _isLoggedIn.value = true
-                }
+                )
             } catch (e: Exception) {
                 _errorMessage.value = "Error al registrarse: ${e.message}"
             } finally {
@@ -110,7 +104,7 @@ class AuthViewModel(
     fun updateProfileImage(imageUri: String) {
         viewModelScope.launch {
             _currentUser.value?.let { user ->
-                prefs.edit().putString("profileImageUri", imageUri).apply()
+                userRepository.updateUserProfileImage(user.id, imageUri)
                 _currentUser.value = user.copy(profileImageUri = imageUri)
             }
         }
@@ -119,9 +113,27 @@ class AuthViewModel(
     fun updateUsername(username: String) {
         viewModelScope.launch {
             _currentUser.value?.let { user ->
-                prefs.edit().putString("username", username).apply()
+                userRepository.updateUsername(user.id, username)
                 _currentUser.value = user.copy(username = username)
             }
         }
     }
+    
+    // Métodos para el sistema gacha
+    fun drawCard() {
+        viewModelScope.launch {
+            _currentUser.value?.let { user ->
+                if (user.coins >= 100) {
+                    val drawnCard = cardRepository.drawRandomCard(user.id)
+                    if (drawnCard != null) {
+                        // Reducir monedas
+                        userRepository.updateUserCoins(user.id, user.coins - 100)
+                        _currentUser.value = user.copy(coins = user.coins - 100)
+                    }
+                }
+            }
+        }
+    }
+    
+    fun getUserCards() = cardRepository.getUserCardsFlow(_currentUser.value?.id ?: 0)
 }

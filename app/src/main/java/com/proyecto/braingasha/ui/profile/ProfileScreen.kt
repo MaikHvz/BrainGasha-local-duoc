@@ -33,7 +33,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.proyecto.braingasha.R
-import com.proyecto.braingasha.data.User
+import com.proyecto.braingasha.data.entity.User
 import com.proyecto.braingasha.ui.theme.*
 import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 
