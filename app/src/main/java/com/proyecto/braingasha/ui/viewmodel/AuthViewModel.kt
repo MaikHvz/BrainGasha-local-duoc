@@ -124,4 +124,30 @@ class AuthViewModel(
             }
         }
     }
+    
+    fun spendCoins(amount: Int): Boolean {
+        val currentCoins = _currentUser.value?.coins ?: 0
+        if (currentCoins >= amount) {
+            viewModelScope.launch {
+                _currentUser.value?.let { user ->
+                    val newCoins = user.coins - amount
+                    prefs.edit().putInt("coins", newCoins).apply()
+                    _currentUser.value = user.copy(coins = newCoins)
+                }
+            }
+            return true
+        }
+        return false
+    }
+    
+    fun addCard(cardId: String) {
+        val currentCards = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
+        val updatedCards = currentCards.toMutableSet()
+        updatedCards.add(cardId)
+        prefs.edit().putStringSet("user_cards", updatedCards).apply()
+    }
+    
+    fun getUserCards(): Set<String> {
+        return prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
+    }
 }
