@@ -128,10 +128,10 @@ fun HomeBody(innerPadding: PaddingValues, viewModel: HomeViewModel, onViewCollec
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(45.dp),
-                enabled = userCoins >= 100 // Deshabilitar si no hay suficientes monedas
+                enabled = userCoins >= 100 && uiState.canPull // Deshabilitar si no hay monedas o en cooldown
             ) {
                 Text(
-                    text = "Tirar (100 monedas)",
+                    text = if (uiState.canPull) "Tirar (100 monedas)" else "Espera...",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )

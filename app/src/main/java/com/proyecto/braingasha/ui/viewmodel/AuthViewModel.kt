@@ -1,10 +1,10 @@
 package com.proyecto.braingasha.ui.viewmodel
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proyecto.braingasha.data.User
+import com.proyecto.braingasha.data.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +14,8 @@ class AuthViewModel(
     private val context: Context
 ) : ViewModel() {
     
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+    // Reemplaza acceso directo a SharedPreferences por repositorio
+    private val repository = AuthRepository(context)
 
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -32,34 +33,17 @@ class AuthViewModel(
     val totalPulls: StateFlow<Int> = _totalPulls.asStateFlow()
     
     init {
-        // Cargar datos del usuario si existe
-        val email = prefs.getString("email", null)
-        val password = prefs.getString("password", null)
-        val username = prefs.getString("username", null)
-        val profileImageUri = prefs.getString("profileImageUri", null)
-        val coins = prefs.getInt("coins", 1000) // Default 1000 coins
-        val userCardsSet = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
-        val totalCartas = prefs.getInt("total_cartas", userCardsSet.size)
-        val totalTiradas = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
-
-        if (email != null && password != null) {
-            _currentUser.value = User(
-                id = 1,
-                email = email,
-                password = password,
-                username = username ?: "Usuario",
-                profileImageUri = profileImageUri,
-                coins = coins,
-                totalCartas = totalCartas,
-                totalTiradas = totalTiradas
-            )
-            _isLoggedIn.value = true
-            _totalPulls.value = totalTiradas
-            // Normalizar claves nuevas
-            prefs.edit().apply {
-                putInt("total_cartas", totalCartas)
-                putInt("total_tiradas", totalTiradas)
-            }.apply()
+        // Sincroniza estado con el repositorio
+        viewModelScope.launch {
+            repository.user.collect { user ->
+                _currentUser.value = user
+                _isLoggedIn.value = user != null
+            }
+        }
+        viewModelScope.launch {
+            repository.totalPulls.collect { pulls ->
+                _totalPulls.value = pulls
+            }
         }
     }
 
@@ -67,27 +51,9 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            
             try {
-                val savedEmail = prefs.getString("email", "")
-                val savedPassword = prefs.getString("password", "")
-                
-                if (email == savedEmail && password == savedPassword) {
-                    val userCardsSet = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
-                    val user = User(
-                        id = 1,
-                        email = email,
-                        password = password,
-                        username = prefs.getString("username", "") ?: "",
-                        profileImageUri = prefs.getString("profileImageUri", null),
-                        coins = prefs.getInt("coins", 1000),
-                        totalCartas = prefs.getInt("total_cartas", userCardsSet.size),
-                        totalTiradas = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
-                    )
-                    _currentUser.value = user
-                    _isLoggedIn.value = true
-                    _totalPulls.value = user.totalTiradas
-                } else {
+                val success = repository.login(email, password)
+                if (!success) {
                     _errorMessage.value = "Credenciales incorrectas"
                 }
             } catch (e: Exception) {
@@ -102,40 +68,8 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            
             try {
-                val existingEmail = prefs.getString("email", "")
-                if (email == existingEmail) {
-                    _errorMessage.value = "El usuario ya existe"
-                } else {
-                    // Guardar datos en SharedPreferences
-                    prefs.edit().apply {
-                        putString("email", email)
-                        putString("password", password)
-                        putString("username", username)
-                        putString("profileImageUri", null)
-                        putInt("coins", 1000)
-                        putInt("total_tiradas", 0)
-                        putStringSet("user_cards", mutableSetOf())
-                        putInt("total_cartas", 0)
-                        putInt("total_pulls", 0)
-                        apply()
-                    }
-                    
-                    val user = User(
-                        id = 1,
-                        email = email,
-                        password = password,
-                        username = username,
-                        profileImageUri = null,
-                        coins = 1000,
-                        totalCartas = 0,
-                        totalTiradas = 0
-                    )
-                    _currentUser.value = user
-                    _isLoggedIn.value = true
-                    _totalPulls.value = 0
-                }
+                repository.register(email, password, username)
             } catch (e: Exception) {
                 _errorMessage.value = "Error al registrarse: ${e.message}"
             } finally {
@@ -145,8 +79,7 @@ class AuthViewModel(
     }
 
     fun logout() {
-        _currentUser.value = null
-        _isLoggedIn.value = false
+        repository.logout()
     }
 
     fun clearError() {
@@ -154,59 +87,22 @@ class AuthViewModel(
     }
 
     fun updateProfileImage(imageUri: String) {
-        viewModelScope.launch {
-            _currentUser.value?.let { user ->
-                prefs.edit().putString("profileImageUri", imageUri).apply()
-                _currentUser.value = user.copy(profileImageUri = imageUri)
-            }
-        }
+        viewModelScope.launch { repository.updateProfileImage(imageUri) }
     }
 
     fun updateUsername(username: String) {
-        viewModelScope.launch {
-            _currentUser.value?.let { user ->
-                prefs.edit().putString("username", username).apply()
-                _currentUser.value = user.copy(username = username)
-            }
-        }
+        viewModelScope.launch { repository.updateUsername(username) }
     }
     
     fun spendCoins(amount: Int): Boolean {
-        val currentCoins = _currentUser.value?.coins ?: 0
-        if (currentCoins >= amount) {
-            viewModelScope.launch {
-                _currentUser.value?.let { user ->
-                    val newCoins = user.coins - amount
-                    prefs.edit().putInt("coins", newCoins).apply()
-                    _currentUser.value = user.copy(coins = newCoins)
-                }
-            }
-            // Incrementar el contador de tiradas
-            _totalPulls.value = _totalPulls.value + 1
-            // Guardar el total de tiradas en SharedPreferences (compatibilidad)
-            prefs.edit().apply {
-                putInt("total_pulls", _totalPulls.value)
-                putInt("total_tiradas", _totalPulls.value)
-            }.apply()
-            // Actualizar el usuario en memoria
-            _currentUser.value = _currentUser.value?.copy(totalTiradas = _totalPulls.value)
-            return true
-        }
-        return false
+        return repository.spendCoins(amount)
     }
     
     fun addCard(cardId: String) {
-        val currentCards = prefs.getStringSet("user_cards", mutableSetOf<String>()) ?: mutableSetOf()
-        val updatedCards = currentCards.toMutableSet()
-        updatedCards.add(cardId)
-        prefs.edit().putStringSet("user_cards", updatedCards).apply()
-        // Actualizar total de cartas persistido y en memoria
-        val totalCartas = updatedCards.size
-        prefs.edit().putInt("total_cartas", totalCartas).apply()
-        _currentUser.value = _currentUser.value?.copy(totalCartas = totalCartas)
+        repository.addCard(cardId)
     }
     
     fun getUserCards(): Set<String> {
-        return prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
+        return repository.getUserCards()
     }
 }
