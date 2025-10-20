@@ -45,8 +45,8 @@ class HomeViewModel(
                 // Costo de tirar una carta: 100 monedas
                 val success = authViewModel.spendCoins(100)
                 if (success) {
-                    // Generar una carta aleatoria (ID entre 1 y 10), permite duplicados
-                    val randomCardId = (1..10).random().toString()
+                    // Generar una carta aleatoria (ID entre 1 y 151), permite duplicados
+                    val randomCardId = (1..151).random().toString()
                     authViewModel.addCard(randomCardId)
                     // Refrescar conteo: incrementa localmente mientras llega el flujo
                     _uiState.value = _uiState.value.copy(userCards = _uiState.value.userCards + 1)

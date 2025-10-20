@@ -13,15 +13,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.proyecto.braingasha.ui.theme.Purpura
 import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
+import com.proyecto.braingasha.data.network.PokemonApi
+import com.proyecto.braingasha.data.network.PokemonInfo
 
 @Composable
 fun ColeccionScreen(viewModel: ColeccionViewModel) {
@@ -71,6 +81,17 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
 
 @Composable
 fun CardItem(cardId: String) {
+    val context = LocalContext.current
+    val id = cardId.toIntOrNull() ?: (1..151).random()
+    var info by remember(id) { mutableStateOf<PokemonInfo?>(null) }
+    var isLoading by remember(id) { mutableStateOf(true) }
+
+    LaunchedEffect(id) {
+        isLoading = true
+        info = PokemonApi.fetchPokemon(id)
+        isLoading = false
+    }
+
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -81,30 +102,41 @@ fun CardItem(cardId: String) {
             containerColor = Color.White
         )
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Carta #$cardId",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Purpura
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = "Rareza: ${getRareza(cardId)}",
-                    fontSize = 14.sp
-                )
-            }
+            Text(
+                text = info?.name ?: "Pokémon #$id",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Purpura
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(info?.imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = info?.name ?: "Pokémon",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Carta #$cardId",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
         }
     }
 }
