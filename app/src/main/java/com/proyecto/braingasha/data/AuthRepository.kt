@@ -2,19 +2,17 @@ package com.proyecto.braingasha.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.proyecto.braingasha.data.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
-class AuthRepository(context: Context) {
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-
+class AuthRepository(private val context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
     private val _user = MutableStateFlow(readUser())
-    val user: StateFlow<User?> = _user.asStateFlow()
+    val user: StateFlow<User?> = _user
 
-    private val _totalPulls = MutableStateFlow(readTotalPulls())
-    val totalPulls: StateFlow<Int> = _totalPulls.asStateFlow()
+    private val _totalPulls = MutableStateFlow(prefs.getInt("total_pulls", 0))
+    val totalPulls: StateFlow<Int> = _totalPulls
 
     private fun readUser(): User? {
         val email = prefs.getString("email", null)
@@ -22,8 +20,9 @@ class AuthRepository(context: Context) {
         val username = prefs.getString("username", null)
         val profileImageUri = prefs.getString("profileImageUri", null)
         val coins = prefs.getInt("coins", 1000)
-        val userCardsSet = prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
-        val totalCartas = prefs.getInt("total_cartas", userCardsSet.size)
+        val userCardsListStr = prefs.getString("user_cards_list", "")
+        val userCardsList = if (userCardsListStr.isNullOrBlank()) emptyList() else userCardsListStr.split(",").filter { it.isNotBlank() }
+        val totalCartas = prefs.getInt("total_cartas", userCardsList.size)
         val totalTiradas = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
         return if (email != null && password != null) {
             User(
@@ -41,14 +40,11 @@ class AuthRepository(context: Context) {
         }
     }
 
-    private fun readTotalPulls(): Int = prefs.getInt("total_tiradas", prefs.getInt("total_pulls", 0))
-
     fun login(email: String, password: String): Boolean {
-        val savedEmail = prefs.getString("email", "")
-        val savedPassword = prefs.getString("password", "")
-        return if (email == savedEmail && password == savedPassword) {
+        val storedEmail = prefs.getString("email", null)
+        val storedPassword = prefs.getString("password", null)
+        return if (storedEmail == email && storedPassword == password) {
             _user.value = readUser()
-            _totalPulls.value = readTotalPulls()
             true
         } else {
             false
@@ -64,6 +60,7 @@ class AuthRepository(context: Context) {
             putInt("coins", 1000)
             putInt("total_tiradas", 0)
             putStringSet("user_cards", mutableSetOf())
+            putString("user_cards_list", "")
             putInt("total_cartas", 0)
             putInt("total_pulls", 0)
         }.apply()
@@ -72,18 +69,23 @@ class AuthRepository(context: Context) {
     }
 
     fun logout() {
+        prefs.edit().apply {
+            remove("email")
+            remove("password")
+            remove("username")
+            remove("profileImageUri")
+            remove("coins")
+            remove("user_cards")
+            remove("user_cards_list")
+            remove("total_cartas")
+            remove("total_tiradas")
+            remove("total_pulls")
+        }.apply()
         _user.value = null
+        _totalPulls.value = 0
     }
 
-    fun updateProfileImage(imageUri: String) {
-        prefs.edit().putString("profileImageUri", imageUri).apply()
-        _user.value = _user.value?.copy(profileImageUri = imageUri)
-    }
-
-    fun updateUsername(username: String) {
-        prefs.edit().putString("username", username).apply()
-        _user.value = _user.value?.copy(username = username)
-    }
+    fun isLoggedIn(): Boolean = _user.value != null
 
     fun spendCoins(amount: Int): Boolean {
         val currentCoins = _user.value?.coins ?: 0
@@ -110,15 +112,35 @@ class AuthRepository(context: Context) {
     }
 
     fun addCard(cardId: String) {
+        // Mantener set de únicas para pantallas que lo necesiten
         val currentCards = prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
-        if (!currentCards.contains(cardId)) {
-            val updated = currentCards.toMutableSet().apply { add(cardId) }
-            prefs.edit().putStringSet("user_cards", updated).apply()
-            val totalCartas = updated.size
-            prefs.edit().putInt("total_cartas", totalCartas).apply()
-            _user.value = _user.value?.copy(totalCartas = totalCartas)
-        }
+        val updated = currentCards.toMutableSet().apply { add(cardId) }
+        prefs.edit().putStringSet("user_cards", updated).apply()
+        // Añadir a lista con duplicados
+        val listStr = prefs.getString("user_cards_list", "") ?: ""
+        val newListStr = if (listStr.isBlank()) cardId else "$listStr,$cardId"
+        prefs.edit().putString("user_cards_list", newListStr).apply()
+        // Incrementar total_cartas en 1 para contar duplicados también
+        val currentTotal = prefs.getInt("total_cartas", 0)
+        val newTotal = currentTotal + 1
+        prefs.edit().putInt("total_cartas", newTotal).apply()
+        _user.value = _user.value?.copy(totalCartas = newTotal)
     }
 
     fun getUserCards(): Set<String> = prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
+
+    fun getUserCardsList(): List<String> {
+        val listStr = prefs.getString("user_cards_list", "") ?: ""
+        return if (listStr.isBlank()) emptyList() else listStr.split(",").filter { it.isNotBlank() }
+    }
+
+    fun updateProfileImage(imageUri: String) {
+        prefs.edit().putString("profileImageUri", imageUri).apply()
+        _user.value = _user.value?.copy(profileImageUri = imageUri)
+    }
+
+    fun updateUsername(username: String) {
+        prefs.edit().putString("username", username).apply()
+        _user.value = _user.value?.copy(username = username)
+    }
 }

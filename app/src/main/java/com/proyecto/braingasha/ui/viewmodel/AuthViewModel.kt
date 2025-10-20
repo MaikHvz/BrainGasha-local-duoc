@@ -99,7 +99,7 @@ class AuthViewModel(
     fun updateUsername(username: String) {
         viewModelScope.launch { repository.updateUsername(username) }
     }
-    
+
     fun spendCoins(amount: Int): Boolean {
         return repository.spendCoins(amount)
     }
@@ -112,25 +112,26 @@ class AuthViewModel(
         return repository.getUserCards()
     }
 
+    fun getUserCardsList(): List<String> {
+        return repository.getUserCardsList()
+    }
+
     // Nuevo: exponer addCoins
     fun addCoins(amount: Int) {
         viewModelScope.launch { repository.addCoins(amount) }
     }
 
-    // Nuevo: iniciar incremento automático cada 10 segundos (+100)
+    // Auto incremento de monedas cada 10 segundos
     fun startAutoCoinIncrement() {
-        if (autoCoinJob != null) return // evitar múltiples jobs
+        stopAutoCoinIncrement()
         autoCoinJob = viewModelScope.launch {
             while (isActive) {
                 delay(10_000)
-                if (_isLoggedIn.value) {
-                    repository.addCoins(100)
-                }
+                addCoins(100)
             }
         }
     }
 
-    // Nuevo: detener incremento automático explícitamente
     fun stopAutoCoinIncrement() {
         autoCoinJob?.cancel()
         autoCoinJob = null

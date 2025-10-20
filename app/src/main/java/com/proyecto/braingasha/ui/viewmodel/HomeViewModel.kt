@@ -3,7 +3,6 @@ package com.proyecto.braingasha.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proyecto.braingasha.ui.home.HomeUiState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,6 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.delay
 
 class HomeViewModel(
     private val authViewModel: AuthViewModel
@@ -26,7 +26,7 @@ class HomeViewModel(
         viewModelScope.launch {
             combine(authViewModel.currentUser, authViewModel.totalPulls) { user, totalPulls ->
                 val coins = user?.coins ?: 0
-                val cardsCount = authViewModel.getUserCards().size
+                val cardsCount = user?.totalCartas ?: 0
                 HomeUiState(coins = coins, totalPulls = totalPulls, userCards = cardsCount, canPull = _uiState.value.canPull)
             }.collect { state ->
                 _uiState.value = state
@@ -45,11 +45,11 @@ class HomeViewModel(
                 // Costo de tirar una carta: 100 monedas
                 val success = authViewModel.spendCoins(100)
                 if (success) {
-                    // Generar una carta aleatoria (ID entre 1 y 10)
+                    // Generar una carta aleatoria (ID entre 1 y 10), permite duplicados
                     val randomCardId = (1..10).random().toString()
                     authViewModel.addCard(randomCardId)
-                    // Refrescar conteo de cartas en el estado
-                    _uiState.value = _uiState.value.copy(userCards = authViewModel.getUserCards().size)
+                    // Refrescar conteo: incrementa localmente mientras llega el flujo
+                    _uiState.value = _uiState.value.copy(userCards = _uiState.value.userCards + 1)
                 }
 
                 // Espera antes de permitir otra tirada
