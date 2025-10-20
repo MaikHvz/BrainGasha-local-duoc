@@ -7,7 +7,7 @@ Una aplicación móvil de cartas gacha desarrollada con Kotlin, Jetpack Compose 
 ### 🔐 Sistema de Autenticación
 - **Login/Registro funcional** con SQLite
 - Validación de credenciales
-- Manejo de errores y estados de carga
+- Manejo de errores y estados de carga.
 - Navegación automática entre login y app principal
 
 ### 👤 Perfil de Usuario

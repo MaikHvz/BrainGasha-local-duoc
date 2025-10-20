@@ -45,6 +45,15 @@ fun LoginRegisterScreen(
     var username by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+
+    fun isValidGmail(mail: String): Boolean {
+        val regex = Regex("^[A-Za-z0-9._%+-]+@gmail\\.com$")
+        return regex.matches(mail)
+    }
 
     val isLoggedIn by authViewModel.isLoggedIn.collectAsStateWithLifecycle()
     val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
@@ -100,12 +109,19 @@ fun LoginRegisterScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        emailError = if (email.isNotEmpty() && !isValidGmail(email)) "Ingresa un Gmail válido (ej. usuario@gmail.com)" else null
+                    },
                     label = { Text("Correo electrónico") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     leadingIcon = { Icon(imageVector = Icons.Filled.Email, contentDescription = "Correo") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = emailError != null,
+                    supportingText = {
+                        if (emailError != null) Text(emailError!!, color = Color.Red, fontSize = 12.sp)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -114,11 +130,18 @@ fun LoginRegisterScreen(
                 if (!isLogin) {
                     OutlinedTextField(
                         value = username,
-                        onValueChange = { username = it },
+                        onValueChange = {
+                            username = it
+                            usernameError = if (username.isNotEmpty() && username.length < 3) "Mínimo 3 caracteres" else null
+                        },
                         label = { Text("Nombre de usuario") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = "Usuario") }
+                        leadingIcon = { Icon(imageVector = Icons.Filled.Person, contentDescription = "Usuario") },
+                        isError = usernameError != null,
+                        supportingText = {
+                            if (usernameError != null) Text(usernameError!!, color = Color.Red, fontSize = 12.sp)
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -126,7 +149,10 @@ fun LoginRegisterScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        passwordError = if (password.isNotEmpty() && password.length < 6) "Mínimo 6 caracteres" else null
+                    },
                     label = { Text("Contraseña") },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -140,7 +166,11 @@ fun LoginRegisterScreen(
                             )
                         }
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = passwordError != null,
+                    supportingText = {
+                        if (passwordError != null) Text(passwordError!!, color = Color.Red, fontSize = 12.sp)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -149,7 +179,10 @@ fun LoginRegisterScreen(
                 if (!isLogin) {
                     OutlinedTextField(
                         value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
+                        onValueChange = {
+                            confirmPassword = it
+                            confirmPasswordError = if (confirmPassword.isNotEmpty() && confirmPassword != password) "Las contraseñas no coinciden" else null
+                        },
                         label = { Text("Confirmar contraseña") },
                         visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
@@ -163,7 +196,11 @@ fun LoginRegisterScreen(
                                 )
                             }
                         },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        isError = confirmPasswordError != null,
+                        supportingText = {
+                            if (confirmPasswordError != null) Text(confirmPasswordError!!, color = Color.Red, fontSize = 12.sp)
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -175,7 +212,17 @@ fun LoginRegisterScreen(
                         if (isLogin) {
                             authViewModel.login(email, password)
                         } else {
-                            if (password == confirmPassword && username.isNotBlank()) {
+                            val isEmailValid = isValidGmail(email)
+                            val isUsernameValid = username.length >= 3
+                            val isPasswordValid = password.length >= 6
+                            val isConfirmValid = password == confirmPassword
+
+                            emailError = if (!isEmailValid) "Ingresa un Gmail válido (ej. usuario@gmail.com)" else null
+                            usernameError = if (!isUsernameValid) "Mínimo 3 caracteres" else null
+                            passwordError = if (!isPasswordValid) "Mínimo 6 caracteres" else null
+                            confirmPasswordError = if (!isConfirmValid) "Las contraseñas no coinciden" else null
+
+                            if (isEmailValid && isUsernameValid && isPasswordValid && isConfirmValid) {
                                 authViewModel.register(email, password, username)
                             }
                         }

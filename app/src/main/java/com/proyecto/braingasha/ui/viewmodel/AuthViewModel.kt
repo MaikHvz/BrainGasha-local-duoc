@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.delay
 
 class AuthViewModel(
     private val context: Context
@@ -31,6 +34,8 @@ class AuthViewModel(
     
     private val _totalPulls = MutableStateFlow(0)
     val totalPulls: StateFlow<Int> = _totalPulls.asStateFlow()
+
+    private var autoCoinJob: Job? = null
     
     init {
         // Sincroniza estado con el repositorio
@@ -79,6 +84,7 @@ class AuthViewModel(
     }
 
     fun logout() {
+        stopAutoCoinIncrement()
         repository.logout()
     }
 
@@ -104,5 +110,29 @@ class AuthViewModel(
     
     fun getUserCards(): Set<String> {
         return repository.getUserCards()
+    }
+
+    // Nuevo: exponer addCoins
+    fun addCoins(amount: Int) {
+        viewModelScope.launch { repository.addCoins(amount) }
+    }
+
+    // Nuevo: iniciar incremento automático cada 10 segundos (+100)
+    fun startAutoCoinIncrement() {
+        if (autoCoinJob != null) return // evitar múltiples jobs
+        autoCoinJob = viewModelScope.launch {
+            while (isActive) {
+                delay(10_000)
+                if (_isLoggedIn.value) {
+                    repository.addCoins(100)
+                }
+            }
+        }
+    }
+
+    // Nuevo: detener incremento automático explícitamente
+    fun stopAutoCoinIncrement() {
+        autoCoinJob?.cancel()
+        autoCoinJob = null
     }
 }

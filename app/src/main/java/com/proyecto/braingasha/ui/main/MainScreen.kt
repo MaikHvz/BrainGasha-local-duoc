@@ -3,22 +3,22 @@ package com.proyecto.braingasha.ui.main
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.proyecto.braingasha.ui.components.BottomNavBar
 import com.proyecto.braingasha.ui.components.TopBar
 import com.proyecto.braingasha.ui.home.HomeScreen
-import com.proyecto.braingasha.ui.coleccion.ColeccionScreen
+import com.proyecto.braingasha.ui.navigation.Routes
 import com.proyecto.braingasha.ui.profile.ProfileScreen
 import com.proyecto.braingasha.ui.sparks.SparksScreen
 import com.proyecto.braingasha.ui.tienda.TiendaScreen
+import com.proyecto.braingasha.ui.coleccion.ColeccionScreen
 import com.proyecto.braingasha.ui.viewmodel.AuthViewModel
 import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
-import com.proyecto.braingasha.ui.navigation.Routes
+import androidx.compose.runtime.remember
 
 @Composable
 fun MainScreen(
@@ -26,6 +26,11 @@ fun MainScreen(
 ) {
     // Controlador que maneja a qué pantalla estás navegando
     val navController = rememberNavController()
+
+    // Inicia el incremento automático de monedas cuando se compone MainScreen
+    LaunchedEffect(Unit) {
+        authViewModel.startAutoCoinIncrement()
+    }
 
     // Scaffold principal
     Scaffold(

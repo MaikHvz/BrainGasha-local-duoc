@@ -101,6 +101,14 @@ class AuthRepository(context: Context) {
         return true
     }
 
+    // Nuevo: añadir monedas y actualizar _user y preferencias
+    fun addCoins(amount: Int) {
+        val currentCoins = _user.value?.coins ?: 0
+        val newCoins = currentCoins + amount
+        prefs.edit().putInt("coins", newCoins).apply()
+        _user.value = _user.value?.copy(coins = newCoins)
+    }
+
     fun addCard(cardId: String) {
         val currentCards = prefs.getStringSet("user_cards", mutableSetOf()) ?: mutableSetOf()
         if (!currentCards.contains(cardId)) {
