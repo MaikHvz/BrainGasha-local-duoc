@@ -30,7 +30,7 @@ fun TopBar(authViewModel: AuthViewModel? = null) {
     TopAppBar(
         title = {
             Text(
-                text = "BrainGasha",
+                text = "PokeGacha",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
