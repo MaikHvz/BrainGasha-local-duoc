@@ -13,6 +13,6 @@ fun SparksScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Sparks (placeholder)")
+        Text(text = "Sparks ")
     }
 }

@@ -42,13 +42,13 @@ class HomeViewModel(
                 // Inicia cooldown y deshabilita el botón
                 _uiState.value = _uiState.value.copy(canPull = false)
 
-                // Costo de tirar una carta: 100 monedas
+                // Costo de tirar una carta 100 monedas
                 val success = authViewModel.spendCoins(100)
                 if (success) {
-                    // Generar una carta aleatoria (ID entre 1 y 151), permite duplicados
+                    // Generar una carta aleatoria (ID entre 1 y 151), permite duplicadosn antes no permitia duplicados
                     val randomCardId = (1..151).random().toString()
                     authViewModel.addCard(randomCardId)
-                    // Refrescar conteo: incrementa localmente mientras llega el flujo
+                    // Refrescar conteo
                     _uiState.value = _uiState.value.copy(userCards = _uiState.value.userCards + 1)
                 }
 

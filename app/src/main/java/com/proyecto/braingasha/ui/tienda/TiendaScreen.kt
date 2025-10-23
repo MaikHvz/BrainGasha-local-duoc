@@ -13,6 +13,6 @@ fun TiendaScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Tienda (placeholder)")
+        Text(text = "Tienda ")
     }
 }
