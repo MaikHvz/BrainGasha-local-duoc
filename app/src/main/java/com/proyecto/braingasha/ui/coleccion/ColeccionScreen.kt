@@ -82,7 +82,7 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
 @Composable
 fun CardItem(cardId: String) {
     val context = LocalContext.current
-    val id = cardId.toIntOrNull() ?: (1..151).random()
+    val id = cardId.toIntOrNull() ?: (1..1025).random()
     var info by remember(id) { mutableStateOf<PokemonInfo?>(null) }
     var isLoading by remember(id) { mutableStateOf(true) }
 
