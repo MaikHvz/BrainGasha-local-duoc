@@ -49,7 +49,7 @@ fun MainScreen(
                 val coleccionViewModel = remember(authViewModel) { ColeccionViewModel(authViewModel) }
                 ColeccionScreen(coleccionViewModel)
             }
-            composable(Routes.TIENDA) { TiendaScreen() }
+            composable(Routes.TIENDA) { TiendaScreen(authViewModel) }
             composable(Routes.PROFILE) { ProfileScreen(authViewModel = authViewModel) }
         }
     }
