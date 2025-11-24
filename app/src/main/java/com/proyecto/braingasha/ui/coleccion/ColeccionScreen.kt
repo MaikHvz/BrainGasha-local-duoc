@@ -32,67 +32,22 @@ import com.proyecto.braingasha.ui.theme.Purpura
 import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
 import com.proyecto.braingasha.data.network.PokemonApi
 import com.proyecto.braingasha.data.network.PokemonInfo
-
-@Composable
-fun ColeccionScreen(viewModel: ColeccionViewModel) {
-    val uiState by viewModel.uiState.collectAsState()
-    val userCards = uiState.cards
-    
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Mi Colección",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Purpura,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-        
-        if (userCards.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Aún no tienes cartas en tu colección.\n¡Tira para conseguir algunas!",
-                    textAlign = TextAlign.Center,
-                    fontSize = 18.sp
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(8.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Usar key estable por cardId para evitar reciclaje incorrecto de estado
-                items(userCards, key = { it }) { cardId ->
-                    CardItem(cardId = cardId)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun CardItem(cardId: String) {
     val context = LocalContext.current
-    // Asegurar que el estado y efecto se asocien al cardId, no al índice de la grilla
     val id = cardId.toIntOrNull() ?: (1..1025).random()
+
     var info by remember(cardId) { mutableStateOf<PokemonInfo?>(null) }
     var isLoading by remember(cardId) { mutableStateOf(true) }
 
+    // Cargar info del Pokémon
     LaunchedEffect(cardId) {
         isLoading = true
         info = PokemonApi.fetchPokemon(id)
         isLoading = false
     }
+
+    val imageUrl = info?.imageUrl?.takeIf { it.isNotBlank() } ?: officialArtworkUrl(id)
 
     Card(
         modifier = Modifier
@@ -100,9 +55,7 @@ fun CardItem(cardId: String) {
             .aspectRatio(0.7f),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(2.dp, Purpura),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -120,18 +73,29 @@ fun CardItem(cardId: String) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-    val imageUrl = info?.imageUrl ?: officialArtworkUrl(id)
-    AsyncImage(
-        model = ImageRequest.Builder(context)
-            .data(imageUrl)
-            .crossfade(true)
-            .build(),
-        contentDescription = info?.name ?: "Pokémon",
-        modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f),
-        contentScale = ContentScale.Fit
-    )
+            if (isLoading) {
+                // Spinner mientras carga
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = info?.name ?: "Pokémon",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentScale = ContentScale.Fit
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -141,14 +105,6 @@ fun CardItem(cardId: String) {
                 color = Color.Gray
             )
         }
-    }
-}
-
-fun getRareza(cardId: String): String {
-    return when (cardId.toInt() % 3) {
-        0 -> "Común"
-        1 -> "Rara"
-        else -> "Épica"
     }
 }
 
