@@ -15,6 +15,7 @@ data class PokemonInfo(
 
 object PokemonApi {
     private const val BASE_URL = "https://pokeapi.co/api/v2/pokemon/"
+    private const val PLACEHOLDER_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png"
 
     suspend fun fetchPokemon(id: Int): PokemonInfo? = withContext(Dispatchers.IO) {
         try {
@@ -32,20 +33,18 @@ object PokemonApi {
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(body)
 
-            val name = json.getString("name").replaceFirstChar { it.uppercase() }
-            val sprites = json.getJSONObject("sprites")
-            val other = sprites.optJSONObject("other")
-            val official = other?.optJSONObject("official-artwork")
-            val dreamWorld = other?.optJSONObject("dream_world")
-            val frontDefault = sprites.optString("front_default", "")
+            val name = json.optString("name", "Pokémon #$id").replaceFirstChar { it.uppercase() }
+            val sprites = json.optJSONObject("sprites")
+            val other = sprites?.optJSONObject("other")
+            val officialArtwork = other?.optJSONObject("official-artwork")?.optString("front_default")
+            val dreamWorld = other?.optJSONObject("dream_world")?.optString("front_default")
+            val frontDefault = sprites?.optString("front_default")
 
-            val imageUrl = listOf(
-                official?.optString("front_default"),
-                dreamWorld?.optString("front_default"),
-                frontDefault
-            ).firstOrNull { !it.isNullOrBlank() } ?: ""
+            val imageUrl = listOf(officialArtwork, dreamWorld, frontDefault, PLACEHOLDER_IMAGE)
+                .firstOrNull { !it.isNullOrBlank() } ?: PLACEHOLDER_IMAGE
 
             PokemonInfo(id = id, name = name, imageUrl = imageUrl)
+
         } catch (e: Exception) {
             Log.e("PokemonApi", "fetchPokemon error", e)
             null

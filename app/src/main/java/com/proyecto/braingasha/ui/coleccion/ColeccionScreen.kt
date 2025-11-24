@@ -85,9 +85,16 @@ fun CardItem(cardId: String) {
         isLoading = false
     }
 
+    val nameSlug = info?.name
+        ?.lowercase()
+        ?.replace(" ", "-")
+        ?.replace(".", "")
+        ?.replace("'", "")
+
     val imageUrl = when (fallbackStage) {
         0 -> info?.imageUrl?.takeIf { it.isNotBlank() } ?: officialArtworkUrl(id)
-        else -> spriteUrl(id)
+        1 -> spriteUrl(id)
+        else -> pokemonDbArtworkUrl(nameSlug)
     }
 
     Card(
@@ -134,7 +141,14 @@ fun CardItem(cardId: String) {
                         .fillMaxWidth()
                         .weight(1f),
                     contentScale = ContentScale.Fit,
-                    onError = { fallbackStage = 1 }
+                    onError = {
+                        // Avanza al siguiente fallback si falla la carga
+                        fallbackStage = when (fallbackStage) {
+                            0 -> 1
+                            1 -> 2
+                            else -> 2
+                        }
+                    }
                 )
             }
 
@@ -155,4 +169,10 @@ private fun officialArtworkUrl(id: Int): String {
 
 private fun spriteUrl(id: Int): String {
     return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png"
+}
+
+private fun pokemonDbArtworkUrl(nameSlug: String?): String {
+    // Usa nombre en minúsculas con guiones para PokemonDB
+    // Si no hay nombre aún, retorna una URL vacía y dejará que Coil dispare onError
+    return nameSlug?.let { "https://img.pokemondb.net/artwork/large/$it.jpg" } ?: ""
 }
