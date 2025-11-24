@@ -77,6 +77,7 @@ fun CardItem(cardId: String) {
 
     var info by remember(cardId) { mutableStateOf<PokemonInfo?>(null) }
     var isLoading by remember(cardId) { mutableStateOf(true) }
+    var fallbackStage by remember(cardId) { mutableStateOf(0) }
 
     LaunchedEffect(cardId) {
         isLoading = true
@@ -84,7 +85,10 @@ fun CardItem(cardId: String) {
         isLoading = false
     }
 
-    val imageUrl = info?.imageUrl?.takeIf { it.isNotBlank() } ?: officialArtworkUrl(id)
+    val imageUrl = when (fallbackStage) {
+        0 -> info?.imageUrl?.takeIf { it.isNotBlank() } ?: officialArtworkUrl(id)
+        else -> spriteUrl(id)
+    }
 
     Card(
         modifier = Modifier
@@ -129,7 +133,8 @@ fun CardItem(cardId: String) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
+                    onError = { fallbackStage = 1 }
                 )
             }
 
@@ -146,4 +151,8 @@ fun CardItem(cardId: String) {
 
 private fun officialArtworkUrl(id: Int): String {
     return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png"
+}
+
+private fun spriteUrl(id: Int): String {
+    return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png"
 }
