@@ -188,10 +188,10 @@ private fun StoreCardItem(id: Int, canBuy: Boolean, onBuy: () -> Unit) {
                 enabled = canBuy,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // naranja del menú
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Purpura, // naranja fijo del tema
+                    contentColor = Color.White,
+                    disabledContainerColor = Purpura.copy(alpha = 0.4f),
+                    disabledContentColor = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
