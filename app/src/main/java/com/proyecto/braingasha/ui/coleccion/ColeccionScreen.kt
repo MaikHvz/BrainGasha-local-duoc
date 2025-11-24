@@ -1,22 +1,13 @@
 package com.proyecto.braingasha.ui.coleccion
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +28,7 @@ import com.proyecto.braingasha.data.network.PokemonInfo
 fun ColeccionScreen(viewModel: ColeccionViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val userCards = uiState.cards
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,7 +42,7 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
             color = Purpura,
             modifier = Modifier.padding(vertical = 16.dp)
         )
-        
+
         if (userCards.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -71,7 +62,6 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
                 contentPadding = PaddingValues(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Usar key estable por cardId para evitar reciclaje incorrecto de estado
                 items(userCards, key = { it }) { cardId ->
                     CardItem(cardId = cardId)
                 }
@@ -88,7 +78,6 @@ fun CardItem(cardId: String) {
     var info by remember(cardId) { mutableStateOf<PokemonInfo?>(null) }
     var isLoading by remember(cardId) { mutableStateOf(true) }
 
-    // Cargar info del Pokémon
     LaunchedEffect(cardId) {
         isLoading = true
         info = PokemonApi.fetchPokemon(id)
@@ -122,14 +111,13 @@ fun CardItem(cardId: String) {
             Spacer(modifier = Modifier.height(8.dp))
 
             if (isLoading) {
-                // Spinner mientras carga
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.material3.CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
             } else {
                 AsyncImage(
