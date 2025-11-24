@@ -188,16 +188,16 @@ private fun StoreCardItem(id: Int, canBuy: Boolean, onBuy: () -> Unit) {
                 enabled = canBuy,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF33CC), // magenta fluor
-                    contentColor = Color.White,
-                    disabledContainerColor = Color.LightGray,
-                    disabledContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary, // naranja del menú
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
                     .height(44.dp)
             ) {
-                Text(text = if (canBuy) "Comprar" else "Sin monedas", fontWeight = FontWeight.Bold)
+                Text(text = if (canBuy) "Comprar" else "GG", fontWeight = FontWeight.Bold)
             }
         }
     }
