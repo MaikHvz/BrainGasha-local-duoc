@@ -34,21 +34,31 @@ object PokemonApi {
             val json = JSONObject(body)
 
             val name = json.getString("name").replaceFirstChar { it.uppercase() }
+
             val sprites = json.getJSONObject("sprites")
             val other = sprites.optJSONObject("other")
-            val official = other?.optJSONObject("official-artwork")
-            val dreamWorld = other?.optJSONObject("dream_world")
+            val official = other?.optJSONObject("official-artwork")?.optString("front_default")
+            val dreamWorld = other?.optJSONObject("dream_world")?.optString("front_default")
             val frontDefault = sprites.optString("front_default", "")
-            val imageUrl = listOf(
-                official?.optString("front_default"),
-                dreamWorld?.optString("front_default"),
-                frontDefault
-            ).firstOrNull { !it.isNullOrBlank() } ?: ""
+
+            // Tomar la primera imagen disponible, si no hay usar fallback directo
+            val imageUrl = listOf(official, dreamWorld, frontDefault)
+                .firstOrNull { !it.isNullOrBlank() }
+                ?: officialArtworkUrl(id) // fallback directo a GitHub
 
             PokemonInfo(id = id, name = name, imageUrl = imageUrl)
         } catch (e: Exception) {
             Log.e("PokemonApi", "fetchPokemon error", e)
-            null
+            // fallback para evitar imageUrl vacío
+            return@withContext PokemonInfo(
+                id = id,
+                name = "Pokémon #$id",
+                imageUrl = officialArtworkUrl(id)
+            )
         }
+    }
+
+    private fun officialArtworkUrl(id: Int): String {
+        return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png"
     }
 }
