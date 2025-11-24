@@ -71,7 +71,8 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
                 contentPadding = PaddingValues(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(userCards) { cardId ->
+                // Usar key estable por cardId para evitar reciclaje incorrecto de estado
+                items(userCards, key = { it }) { cardId ->
                     CardItem(cardId = cardId)
                 }
             }
@@ -82,11 +83,12 @@ fun ColeccionScreen(viewModel: ColeccionViewModel) {
 @Composable
 fun CardItem(cardId: String) {
     val context = LocalContext.current
+    // Asegurar que el estado y efecto se asocien al cardId, no al índice de la grilla
     val id = cardId.toIntOrNull() ?: (1..1025).random()
-    var info by remember(id) { mutableStateOf<PokemonInfo?>(null) }
-    var isLoading by remember(id) { mutableStateOf(true) }
+    var info by remember(cardId) { mutableStateOf<PokemonInfo?>(null) }
+    var isLoading by remember(cardId) { mutableStateOf(true) }
 
-    LaunchedEffect(id) {
+    LaunchedEffect(cardId) {
         isLoading = true
         info = PokemonApi.fetchPokemon(id)
         isLoading = false
