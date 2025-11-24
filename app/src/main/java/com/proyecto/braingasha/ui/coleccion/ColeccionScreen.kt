@@ -120,17 +120,18 @@ fun CardItem(cardId: String) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(info?.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = info?.name ?: "Pokémon",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentScale = ContentScale.Fit
-            )
+    val imageUrl = info?.imageUrl ?: officialArtworkUrl(id)
+    AsyncImage(
+        model = ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(true)
+            .build(),
+        contentDescription = info?.name ?: "Pokémon",
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f),
+        contentScale = ContentScale.Fit
+    )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -149,4 +150,8 @@ fun getRareza(cardId: String): String {
         1 -> "Rara"
         else -> "Épica"
     }
+}
+
+private fun officialArtworkUrl(id: Int): String {
+    return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$id.png"
 }
