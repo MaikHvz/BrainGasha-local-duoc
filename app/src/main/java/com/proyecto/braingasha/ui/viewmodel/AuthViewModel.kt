@@ -74,7 +74,10 @@ class AuthViewModel(
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                repository.register(email, password, username)
+                val ok = repository.register(email, password, username)
+                if (!ok) {
+                    _errorMessage.value = "No se pudo registrar. Email ya registrado o datos inválidos"
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Error al registrarse: ${e.message}"
             } finally {
