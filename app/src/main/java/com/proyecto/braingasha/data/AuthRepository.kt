@@ -16,6 +16,10 @@ class AuthRepository(private val context: Context) {
     private val _totalPulls = MutableStateFlow(0)
     val totalPulls: StateFlow<Int> = _totalPulls
 
+    // Mantener colección en memoria (IDs de cartas)
+    private val _cards = MutableStateFlow<List<String>>(emptyList())
+    val cards: StateFlow<List<String>> = _cards
+
     suspend fun login(email: String, password: String): Boolean {
         val response = api.login(LoginRequest(email, password))
         return if (response.isSuccessful) {
@@ -70,11 +74,12 @@ class AuthRepository(private val context: Context) {
         val current = _user.value ?: return
         val newTotal = current.totalCartas + 1
         _user.value = current.copy(totalCartas = newTotal)
+        _cards.value = _cards.value + cardId
     }
 
-    fun getUserCards(): Set<String> = emptySet()
+    fun getUserCards(): Set<String> = _cards.value.toSet()
 
-    fun getUserCardsList(): List<String> = emptyList()
+    fun getUserCardsList(): List<String> = _cards.value
 
     fun updateProfileImage(imageUri: String) {
         val current = _user.value ?: return

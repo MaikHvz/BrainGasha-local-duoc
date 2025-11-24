@@ -35,6 +35,10 @@ class AuthViewModel(
     private val _totalPulls = MutableStateFlow(0)
     val totalPulls: StateFlow<Int> = _totalPulls.asStateFlow()
 
+    // Flujo reactivo de IDs de cartas del usuario
+    private val _userCardsFlow = MutableStateFlow<List<String>>(emptyList())
+    val userCardsFlow: StateFlow<List<String>> = _userCardsFlow.asStateFlow()
+
     private var autoCoinJob: Job? = null
     
     init {
@@ -48,6 +52,12 @@ class AuthViewModel(
         viewModelScope.launch {
             repository.totalPulls.collect { pulls ->
                 _totalPulls.value = pulls
+            }
+        }
+        // Sincroniza cartas del usuario en tiempo real
+        viewModelScope.launch {
+            repository.cards.collect { cards ->
+                _userCardsFlow.value = cards
             }
         }
     }
@@ -75,7 +85,13 @@ class AuthViewModel(
             _errorMessage.value = null
             try {
                 val ok = repository.register(email, password, username)
-                if (!ok) {
+                if (ok) {
+                    // Auto-login inmediato tras registro
+                    val logged = repository.login(email, password)
+                    if (!logged) {
+                        _errorMessage.value = "Registrado, pero no se pudo iniciar sesión automática"
+                    }
+                } else {
                     _errorMessage.value = "No se pudo registrar. Email ya registrado o datos inválidos"
                 }
             } catch (e: Exception) {

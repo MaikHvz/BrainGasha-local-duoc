@@ -35,9 +35,15 @@ object PokemonApi {
 
             val name = json.getString("name").replaceFirstChar { it.uppercase() }
             val sprites = json.getJSONObject("sprites")
-            val other = sprites.getJSONObject("other")
-            val official = other.getJSONObject("official-artwork")
-            val imageUrl = official.getString("front_default")
+            val other = sprites.optJSONObject("other")
+            val official = other?.optJSONObject("official-artwork")
+            val dreamWorld = other?.optJSONObject("dream_world")
+            val frontDefault = sprites.optString("front_default", "")
+            val imageUrl = listOf(
+                official?.optString("front_default"),
+                dreamWorld?.optString("front_default"),
+                frontDefault
+            ).firstOrNull { !it.isNullOrBlank() } ?: ""
 
             PokemonInfo(id = id, name = name, imageUrl = imageUrl)
         } catch (e: Exception) {
