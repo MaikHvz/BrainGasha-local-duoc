@@ -32,6 +32,54 @@ import com.proyecto.braingasha.ui.theme.Purpura
 import com.proyecto.braingasha.ui.viewmodel.ColeccionViewModel
 import com.proyecto.braingasha.data.network.PokemonApi
 import com.proyecto.braingasha.data.network.PokemonInfo
+
+@Composable
+fun ColeccionScreen(viewModel: ColeccionViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val userCards = uiState.cards
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Mi Colección",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Purpura,
+            modifier = Modifier.padding(vertical = 16.dp)
+        )
+        
+        if (userCards.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Aún no tienes cartas en tu colección.\n¡Tira para conseguir algunas!",
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Usar key estable por cardId para evitar reciclaje incorrecto de estado
+                items(userCards, key = { it }) { cardId ->
+                    CardItem(cardId = cardId)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun CardItem(cardId: String) {
     val context = LocalContext.current
